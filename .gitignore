@@ -1,0 +1,41 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+*.db
+*.db-shm
+*.db-wal
+
+# Alembic
+backend/alembic/versions/*.pyc
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug logs
+backend/debug.log
+frontend/debug.log
