@@ -1,17 +1,23 @@
 from typing import List
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Expense, Project
 from app.schemas.project import (
+    BudgetSummary,
+    MonthlyStatItem,
     ProjectCreate,
     ProjectResponse,
     ProjectSummaryResponse,
     ProjectUpdate,
 )
+from app.services import budget as budget_service
+from app.services import export as export_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -79,3 +85,30 @@ def delete_project(project_id: int, db: Session = Depends(get_db)):
     project = _get_project_or_404(project_id, db)
     db.delete(project)
     db.commit()
+
+
+@router.get("/{project_id}/summary", response_model=BudgetSummary)
+def project_summary(project_id: int, db: Session = Depends(get_db)):
+    _get_project_or_404(project_id, db)
+    return budget_service.get_project_summary(db, project_id)
+
+
+@router.get("/{project_id}/monthly-stats", response_model=List[MonthlyStatItem])
+def monthly_stats(project_id: int, db: Session = Depends(get_db)):
+    _get_project_or_404(project_id, db)
+    return budget_service.get_monthly_stats(db, project_id)
+
+
+@router.get("/{project_id}/export")
+def export_excel(project_id: int, db: Session = Depends(get_db)):
+    project = _get_project_or_404(project_id, db)
+    from datetime import date
+
+    today = date.today().strftime("%Y%m%d")
+    filename = f"사업예산_{project.name}_{today}.xlsx"
+    content = export_service.generate_expense_excel(db, project_id)
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )
