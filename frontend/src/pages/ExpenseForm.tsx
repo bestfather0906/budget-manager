@@ -50,7 +50,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
         }
       })
     }
-  }, [projectId, mode, eid])
+  }, [projectId, mode, eid]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAmountChange = (v: string) => {
     const digits = v.replace(/[^0-9]/g, '')

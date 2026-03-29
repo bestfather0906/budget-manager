@@ -123,21 +123,36 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* 전체 집행현황 */}
+      {/* 사업별 집행현황 */}
       {projects.length > 0 && (
         <section className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-primary-500" />
-            <h3 className="text-sm font-semibold text-gray-700">전체 집행현황</h3>
-            <span className="ml-auto text-xs text-gray-400">
-              {fmt(totalSpent)} / {fmt(totalBudget)}
-            </span>
+            <h3 className="text-sm font-semibold text-gray-700">사업별 집행현황</h3>
           </div>
-          <ProgressBar rate={overallRate} color="orange" height="h-3" />
-          <div className="flex justify-between mt-2 text-xs text-gray-400">
-            <span>집행액</span>
-            <span>{overallRate.toFixed(1)}%</span>
+          <div className="space-y-5">
+            {projects.map((p) => (
+              <div key={p.id}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-medium text-gray-800">{p.name}</span>
+                  <span className="text-sm font-bold text-primary-500">{p.execution_rate.toFixed(1)}%</span>
+                </div>
+                <ProgressBar rate={p.execution_rate} color={p.status_color} height="h-2" />
+                <div className="flex justify-between mt-1.5 text-xs text-gray-400">
+                  <span>집행 {fmt(p.total_spent)}</span>
+                  <span>잔액 {fmt(p.total_budget - p.total_spent)} / 전체 {fmt(p.total_budget)}</span>
+                </div>
+              </div>
+            ))}
           </div>
+          {projects.length > 1 && (
+            <div className="mt-5 pt-4 border-t border-gray-100 flex justify-between text-xs text-gray-500">
+              <span className="font-medium">전체 합계</span>
+              <span>{fmt(totalSpent)} / {fmt(totalBudget)}
+                <span className="ml-2 font-bold text-primary-500">{overallRate.toFixed(1)}%</span>
+              </span>
+            </div>
+          )}
         </section>
       )}
 

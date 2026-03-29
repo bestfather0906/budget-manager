@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Download } from 'lucide-react'
+import { Download, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   AreaChart,
   Area,
@@ -14,7 +14,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { getMonthlyStats, exportExcel, getProjectSummary } from '../api/projects'
-import type { MonthlyStatItem, BudgetSummary } from '../types'
+import { getExpenses } from '../api/expenses'
+import type { MonthlyStatItem, BudgetSummary, Expense } from '../types'
 
 const fmt = (n: number) => `₩${n.toLocaleString('ko-KR')}`
 const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b']
@@ -27,6 +28,9 @@ export default function MonthlyStats() {
   const [year, setYear] = useState(new Date().getFullYear())
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
+  const [monthExpenses, setMonthExpenses] = useState<Expense[]>([])
+  const [monthExpensesLoading, setMonthExpensesLoading] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -80,6 +84,28 @@ export default function MonthlyStats() {
     grandTotals[cat] = tableData.reduce((s, r) => s + (r[cat] as number), 0)
     grandTotals['합계'] += grandTotals[cat]
   })
+
+  const handleMonthClick = async (monthKey: string, hasData: boolean) => {
+    if (!id || !hasData) return
+    if (selectedMonth === monthKey) {
+      setSelectedMonth(null)
+      setMonthExpenses([])
+      return
+    }
+    setSelectedMonth(monthKey)
+    setMonthExpensesLoading(true)
+    const [y, m] = monthKey.split('-')
+    const lastDay = new Date(Number(y), Number(m), 0).getDate()
+    try {
+      const r = await getExpenses(Number(id), {
+        start_date: `${monthKey}-01`,
+        end_date: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+      })
+      setMonthExpenses(r.data.items)
+    } finally {
+      setMonthExpensesLoading(false)
+    }
+  }
 
   const handleExport = async () => {
     if (!id || !summary) return
@@ -195,14 +221,24 @@ export default function MonthlyStats() {
               <tbody>
                 {tableData.map((row, i) => {
                   const hasData = (row['합계'] as number) > 0
+                  const monthKey = `${year}-${String(i + 1).padStart(2, '0')}`
+                  const isSelected = selectedMonth === monthKey
                   return (
                     <tr
                       key={i}
+                      onClick={() => handleMonthClick(monthKey, hasData)}
                       className={`border-b border-gray-50 ${
                         i % 2 !== 0 ? 'bg-gray-50/50' : ''
-                      } ${hasData ? '' : 'opacity-40'}`}
+                      } ${hasData ? 'cursor-pointer hover:bg-primary-50/50' : 'opacity-40'} ${
+                        isSelected ? 'bg-primary-50' : ''
+                      }`}
                     >
-                      <td className="px-4 py-2 text-gray-600 font-medium">{row.month}</td>
+                      <td className="px-4 py-2 text-gray-600 font-medium">
+                        <span className="flex items-center gap-1">
+                          {row.month as string}
+                          {hasData && (isSelected ? <ChevronUp size={12} className="text-primary-400" /> : <ChevronDown size={12} className="text-gray-300" />)}
+                        </span>
+                      </td>
                       {categoryNames.map((c) => (
                         <td key={c} className="px-3 py-2 text-right text-gray-600 tabular-nums">
                           {(row[c] as number) > 0 ? fmt(row[c] as number) : '-'}
@@ -228,6 +264,58 @@ export default function MonthlyStats() {
             </table>
           </div>
         </div>
+
+        {/* 월별 지출 상세 내역 */}
+        {selectedMonth && (
+          <div className="col-span-5 bg-white rounded-xl shadow-sm border border-primary-200 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-primary-50">
+              <h3 className="text-sm font-semibold text-gray-800">
+                {selectedMonth.replace('-', '년 ')}월 지출 상세 내역
+              </h3>
+              {monthExpenses.length > 0 && (
+                <span className="text-sm font-bold text-primary-600">
+                  총 {fmt(monthExpenses.reduce((s, e) => s + e.amount, 0))}
+                </span>
+              )}
+            </div>
+            {monthExpensesLoading ? (
+              <div className="flex items-center justify-center h-20">
+                <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : monthExpenses.length === 0 ? (
+              <div className="px-5 py-6 text-center text-sm text-gray-400">지출 내역이 없습니다.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-400 border-b border-gray-100 bg-gray-50">
+                      <th className="text-left px-5 py-2.5 font-medium">날짜</th>
+                      <th className="text-left px-4 py-2.5 font-medium">내용</th>
+                      <th className="text-left px-4 py-2.5 font-medium">비목</th>
+                      <th className="text-left px-4 py-2.5 font-medium">지출처</th>
+                      <th className="text-right px-5 py-2.5 font-medium">금액</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthExpenses.map((e, i) => (
+                      <tr key={e.id} className={`border-b border-gray-50 ${i % 2 !== 0 ? 'bg-gray-50/50' : ''}`}>
+                        <td className="px-5 py-2 text-gray-500">{e.expense_date}</td>
+                        <td className="px-4 py-2 text-gray-800 max-w-[200px] truncate">{e.description}</td>
+                        <td className="px-4 py-2">
+                          <span className="inline-flex px-2 py-0.5 rounded text-[10px] bg-primary-100 text-primary-700 font-medium">
+                            {e.category_name}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-gray-500">{e.vendor || '-'}</td>
+                        <td className="px-5 py-2 text-right font-medium text-gray-800 tabular-nums">{fmt(e.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 비목별 라인 차트 */}
         <div className="col-span-2 bg-[#0F172A] rounded-xl p-5 shadow-sm">

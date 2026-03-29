@@ -29,7 +29,7 @@ export default function CategoryManage() {
     getProjectSummary(projectId).then((r) => setTotalBudget(r.data.total_budget))
   }
 
-  useEffect(() => { load() }, [projectId])
+  useEffect(() => { load() }, [projectId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalAllocated = categories.reduce((s, c) => s + c.allocated_amount, 0)
   const isOverBudget = totalAllocated > totalBudget
