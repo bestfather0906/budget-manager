@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   PieChart,
   FolderKanban,
@@ -15,10 +15,11 @@ import type { ProjectSummary } from '../../types'
 export default function Sidebar() {
   const [projects, setProjects] = useState<ProjectSummary[]>([])
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
-    getProjects().then((r) => setProjects(r.data))
-  }, [])
+    getProjects().then((r) => setProjects(r.data)).catch(() => {})
+  }, [location.pathname])
 
   const projectMenus = (projectId: number) => [
     { label: '집행현황', to: `/projects/${projectId}`, icon: <Wallet size={14} /> },
