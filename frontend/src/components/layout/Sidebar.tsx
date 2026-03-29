@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react'
-import { NavLink, useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard,
+  PieChart,
   FolderKanban,
   Receipt,
   BarChart2,
   Settings,
-  ChevronDown,
-  ChevronRight,
   Plus,
   Wallet,
 } from 'lucide-react'
@@ -16,17 +14,11 @@ import type { ProjectSummary } from '../../types'
 
 export default function Sidebar() {
   const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [expanded, setExpanded] = useState<number | null>(null)
-  const { id } = useParams()
   const navigate = useNavigate()
 
   useEffect(() => {
     getProjects().then((r) => setProjects(r.data))
   }, [])
-
-  useEffect(() => {
-    if (id) setExpanded(Number(id))
-  }, [id])
 
   const projectMenus = (projectId: number) => [
     { label: '집행현황', to: `/projects/${projectId}`, icon: <Wallet size={14} /> },
@@ -44,7 +36,8 @@ export default function Sidebar() {
       </div>
 
       {/* Main nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        {/* 전체 예산 현황 */}
         <NavLink
           to="/"
           end
@@ -56,19 +49,16 @@ export default function Sidebar() {
             }`
           }
         >
-          <LayoutDashboard size={16} />
-          대시보드
+          <PieChart size={16} />
+          전체 예산 현황
         </NavLink>
 
-        {/* Projects */}
-        <div className="pt-2">
-          <p className="text-[10px] uppercase tracking-widest text-slate-600 px-3 mb-1">프로젝트</p>
+        {/* 사업별 메뉴 */}
+        <div className="mt-4 space-y-4">
           {projects.map((p) => (
             <div key={p.id}>
-              <button
-                onClick={() => setExpanded(expanded === p.id ? null : p.id)}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-slate-800 hover:text-white transition-colors text-left"
-              >
+              {/* 사업명 헤더 */}
+              <div className="flex items-center gap-2 px-3 mb-1">
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     p.status_color === 'red'
@@ -78,48 +68,43 @@ export default function Sidebar() {
                         : 'bg-green-400'
                   }`}
                 />
-                <span className="flex-1 truncate text-slate-300">{p.name}</span>
-                {expanded === p.id ? (
-                  <ChevronDown size={13} className="text-slate-500" />
-                ) : (
-                  <ChevronRight size={13} className="text-slate-500" />
-                )}
-              </button>
-              {expanded === p.id && (
-                <div className="ml-5 mt-0.5 space-y-0.5 border-l border-slate-700 pl-3">
-                  {projectMenus(p.id).map((m) => (
-                    <NavLink
-                      key={m.to}
-                      to={m.to}
-                      end
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
-                          isActive
-                            ? 'text-primary-400 font-medium'
-                            : 'text-slate-500 hover:text-white hover:bg-slate-800'
-                        }`
-                      }
-                    >
-                      {m.icon}
-                      {m.label}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
+                <span className="text-xs font-semibold text-slate-300 truncate">{p.name}</span>
+              </div>
+              {/* 하위 메뉴 (항상 펼침) */}
+              <div className="ml-4 space-y-0.5 border-l border-slate-700 pl-3">
+                {projectMenus(p.id).map((m) => (
+                  <NavLink
+                    key={m.to}
+                    to={m.to}
+                    end
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
+                        isActive
+                          ? 'text-primary-400 bg-slate-800 font-medium'
+                          : 'text-slate-500 hover:text-white hover:bg-slate-800'
+                      }`
+                    }
+                  >
+                    {m.icon}
+                    {m.label}
+                  </NavLink>
+                ))}
+              </div>
             </div>
           ))}
-
-          {projects.length < 3 && (
-            <button
-              onClick={() => navigate('/projects/new')}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-primary-400 hover:bg-slate-800 transition-colors mt-1"
-            >
-              <Plus size={14} />새 프로젝트 추가
-            </button>
-          )}
         </div>
 
-        <div className="pt-2 border-t border-slate-800 mt-2">
+        {/* 새 프로젝트 추가 */}
+        {projects.length < 3 && (
+          <button
+            onClick={() => navigate('/projects/new')}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-primary-400 hover:bg-slate-800 transition-colors mt-4"
+          >
+            <Plus size={14} />새 사업 추가
+          </button>
+        )}
+
+        <div className="pt-4 border-t border-slate-800 mt-4">
           <NavLink
             to="/settings"
             className={({ isActive }) =>

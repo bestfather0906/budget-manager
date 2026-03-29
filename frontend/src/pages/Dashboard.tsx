@@ -49,9 +49,9 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* 헤더 */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900">대시보드</h2>
+        <h2 className="text-xl font-bold text-gray-900">전체 예산 현황</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          사업별 집행 현황 및 잔액을 한눈에 확인하세요.
+          전체 사업의 예산 집행 현황 및 잔액을 한눈에 확인하세요.
         </p>
       </div>
 
