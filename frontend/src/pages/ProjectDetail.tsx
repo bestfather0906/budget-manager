@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Download, Plus, Settings, AlertTriangle } from 'lucide-react'
+import { Download, Plus, Settings, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { getProjectSummary, exportExcel } from '../api/projects'
-import type { BudgetSummary } from '../types'
+import { getExpenses } from '../api/expenses'
+import type { BudgetSummary, Expense } from '../types'
 import ProgressBar from '../components/ui/ProgressBar'
 import StatusBadge from '../components/ui/StatusBadge'
 import DonutChart from '../components/ui/DonutChart'
@@ -16,15 +17,50 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    getProjectSummary(Number(id))
-      .then((r) => setSummary(r.data))
+    Promise.all([
+      getProjectSummary(Number(id)),
+      getExpenses(Number(id)),
+    ])
+      .then(([s, e]) => {
+        setSummary(s.data)
+        setExpenses(e.data.items)
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])
+
+  // 월별 그룹핑 (최신 월 순)
+  const monthlyGroups = (() => {
+    const map = new Map<string, Expense[]>()
+    expenses.forEach((e) => {
+      const month = e.expense_date.slice(0, 7) // "YYYY-MM"
+      if (!map.has(month)) map.set(month, [])
+      map.get(month)!.push(e)
+    })
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([month, items]) => ({
+        month,
+        label: `${month.slice(0, 4)}년 ${String(Number(month.slice(5, 7)))}월`,
+        items: items.sort((a, b) => b.expense_date.localeCompare(a.expense_date)),
+        total: items.reduce((s, e) => s + e.amount, 0),
+      }))
+  })()
+
+  const toggleMonth = (month: string) => {
+    setOpenMonths((prev) => {
+      const next = new Set(prev)
+      if (next.has(month)) next.delete(month)
+      else next.add(month)
+      return next
+    })
+  }
 
   const handleExport = async () => {
     if (!id || !summary) return
@@ -213,6 +249,69 @@ export default function ProjectDetail() {
           </div>
         )}
       </div>
+      {/* 월별 집행현황 */}
+      {monthlyGroups.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-gray-700">월별 집행현황</h3>
+          {monthlyGroups.map(({ month, label, items, total }) => {
+            const isOpen = openMonths.has(month)
+            return (
+              <div key={month} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* 월 헤더 — 클릭으로 펼치기/접기 */}
+                <button
+                  onClick={() => toggleMonth(month)}
+                  className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {isOpen ? <ChevronUp size={15} className="text-primary-400" /> : <ChevronDown size={15} className="text-gray-300" />}
+                    <span className="text-sm font-semibold text-gray-800">{label} 집행현황</span>
+                    <span className="text-xs text-gray-400">{items.length}건</span>
+                  </div>
+                  <span className="text-sm font-bold text-primary-500 tabular-nums">{fmt(total)}</span>
+                </button>
+
+                {/* 지출 내역 테이블 */}
+                {isOpen && (
+                  <div className="border-t border-gray-100 overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-xs text-gray-400 bg-gray-50 border-b border-gray-100">
+                          <th className="text-left px-6 py-2.5 font-medium">날짜</th>
+                          <th className="text-left px-4 py-2.5 font-medium">내용</th>
+                          <th className="text-left px-4 py-2.5 font-medium">비목</th>
+                          <th className="text-left px-4 py-2.5 font-medium">지출처</th>
+                          <th className="text-right px-6 py-2.5 font-medium">금액</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((e, i) => (
+                          <tr key={e.id} className={`border-b border-gray-50 ${i % 2 !== 0 ? 'bg-gray-50/50' : ''}`}>
+                            <td className="px-6 py-3 text-gray-500">{e.expense_date}</td>
+                            <td className="px-4 py-3 text-gray-800 max-w-[200px] truncate">{e.description}</td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex px-2 py-0.5 rounded text-xs bg-primary-100 text-primary-700 font-medium">
+                                {e.category_name}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500">{e.vendor || '-'}</td>
+                            <td className="px-6 py-3 text-right font-medium text-gray-800 tabular-nums">{fmt(e.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-primary-50 border-t border-primary-100">
+                          <td colSpan={4} className="px-6 py-3 text-xs font-semibold text-primary-700">{label} 합계</td>
+                          <td className="px-6 py-3 text-right font-bold text-primary-600 tabular-nums">{fmt(total)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
