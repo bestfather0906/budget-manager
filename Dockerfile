@@ -20,4 +20,4 @@ ENV PYTHONPATH=/app
 ENV ENVIRONMENT=production
 
 EXPOSE 8000
-CMD cd /app/backend && alembic upgrade head && cd /app && exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD cd /app/backend && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
