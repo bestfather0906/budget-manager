@@ -178,7 +178,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
                 <option value="">선택 안 함</option>
                 {paymentMethods.map((pm) => (
                   <option key={pm.id} value={pm.id}>
-                    {pm.nickname} ({pm.number})
+                    {pm.type === 'credit' ? '[신용카드]' : pm.type === 'debit' ? '[체크카드]' : '[계좌]'} {pm.nickname} ({pm.number})
                   </option>
                 ))}
               </select>
