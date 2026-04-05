@@ -7,7 +7,7 @@ export const getPaymentMethods = (activeOnly = false) =>
   })
 
 export const createPaymentMethod = (data: {
-  type: 'card' | 'account'
+  type: 'credit' | 'debit' | 'account'
   nickname: string
   number: string
 }) => client.post<PaymentMethod>('/api/v1/payment-methods', data)
