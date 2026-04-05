@@ -276,7 +276,8 @@ export default function ProjectDetail() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-xs text-gray-400 bg-gray-50 border-b border-gray-100">
-                          <th className="text-left px-6 py-2.5 font-medium">날짜</th>
+                          <th className="text-left px-6 py-2.5 font-medium">결제일</th>
+                          <th className="text-left px-4 py-2.5 font-medium">출금일</th>
                           <th className="text-left px-4 py-2.5 font-medium">내용</th>
                           <th className="text-left px-4 py-2.5 font-medium">비목</th>
                           <th className="text-left px-4 py-2.5 font-medium">지출처</th>
@@ -287,12 +288,8 @@ export default function ProjectDetail() {
                       <tbody>
                         {items.map((e, i) => (
                           <tr key={e.id} className={`border-b border-gray-50 ${i % 2 !== 0 ? 'bg-gray-50/50' : ''}`}>
-                            <td className="px-6 py-3 tabular-nums">
-                              <div className="text-gray-500">{e.expense_date}</div>
-                              {e.withdrawal_date && (
-                                <div className="text-[10px] text-blue-500 mt-0.5">출금 {e.withdrawal_date}</div>
-                              )}
-                            </td>
+                            <td className="px-6 py-3 tabular-nums text-gray-500">{e.expense_date}</td>
+                            <td className="px-4 py-3 tabular-nums text-gray-500">{e.withdrawal_date || '-'}</td>
                             <td className="px-4 py-3 text-gray-800 max-w-[200px] truncate">{e.description}</td>
                             <td className="px-4 py-3">
                               <span className="inline-flex px-2 py-0.5 rounded text-xs bg-primary-100 text-primary-700 font-medium">

@@ -289,7 +289,8 @@ export default function MonthlyStats() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-gray-400 border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-5 py-2.5 font-medium">날짜</th>
+                      <th className="text-left px-5 py-2.5 font-medium">결제일</th>
+                      <th className="text-left px-4 py-2.5 font-medium">출금일</th>
                       <th className="text-left px-4 py-2.5 font-medium">내용</th>
                       <th className="text-left px-4 py-2.5 font-medium">비목</th>
                       <th className="text-left px-4 py-2.5 font-medium">지출처</th>
@@ -300,12 +301,8 @@ export default function MonthlyStats() {
                   <tbody>
                     {monthExpenses.map((e, i) => (
                       <tr key={e.id} className={`border-b border-gray-50 ${i % 2 !== 0 ? 'bg-gray-50/50' : ''}`}>
-                        <td className="px-5 py-2 tabular-nums">
-                          <div className="text-gray-500">{e.expense_date}</div>
-                          {e.withdrawal_date && (
-                            <div className="text-[10px] text-blue-500 mt-0.5">출금 {e.withdrawal_date}</div>
-                          )}
-                        </td>
+                        <td className="px-5 py-2 tabular-nums text-gray-500">{e.expense_date}</td>
+                        <td className="px-4 py-2 tabular-nums text-gray-500">{e.withdrawal_date || '-'}</td>
                         <td className="px-4 py-2 text-gray-800 max-w-[200px] truncate">{e.description}</td>
                         <td className="px-4 py-2">
                           <span className="inline-flex px-2 py-0.5 rounded text-[10px] bg-primary-100 text-primary-700 font-medium">

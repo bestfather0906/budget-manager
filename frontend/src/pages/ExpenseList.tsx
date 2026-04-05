@@ -167,7 +167,8 @@ export default function ExpenseList() {
               <thead>
                 <tr className="text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
                   <th className="text-center px-4 py-3 font-medium w-10">#</th>
-                  <th className="text-left px-4 py-3 font-medium">날짜</th>
+                  <th className="text-left px-4 py-3 font-medium">결제일</th>
+                  <th className="text-left px-4 py-3 font-medium">출금일</th>
                   <th className="text-left px-4 py-3 font-medium">내용</th>
                   <th className="text-left px-4 py-3 font-medium">비목</th>
                   <th className="text-left px-4 py-3 font-medium">지출처</th>
@@ -185,12 +186,8 @@ export default function ExpenseList() {
                     }`}
                   >
                     <td className="px-4 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
-                    <td className="px-4 py-3 tabular-nums">
-                      <div className="text-gray-500">{e.expense_date}</div>
-                      {e.withdrawal_date && (
-                        <div className="text-[10px] text-blue-500 mt-0.5">출금 {e.withdrawal_date}</div>
-                      )}
-                    </td>
+                    <td className="px-4 py-3 tabular-nums text-gray-500">{e.expense_date}</td>
+                    <td className="px-4 py-3 tabular-nums text-gray-500">{e.withdrawal_date || '-'}</td>
                     <td className="px-4 py-3 text-gray-800 max-w-[160px] truncate">{e.description}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex px-2 py-0.5 rounded text-xs bg-primary-100 text-primary-700 font-medium">
