@@ -193,10 +193,25 @@ export default function ExpenseList() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500">{e.vendor || '-'}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {e.payment_method_nickname
-                        ? `${e.payment_method_nickname} (${e.payment_method_number})`
-                        : e.card_number || '-'}
+                    <td className="px-4 py-3 text-xs">
+                      {e.payment_method_nickname ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-flex px-1.5 py-0.5 rounded font-medium ${
+                            e.payment_method_type === 'credit'
+                              ? 'bg-blue-50 text-blue-600'
+                              : e.payment_method_type === 'debit'
+                                ? 'bg-violet-50 text-violet-600'
+                                : 'bg-emerald-50 text-emerald-600'
+                          }`}>
+                            {e.payment_method_type === 'credit' ? '신용카드'
+                              : e.payment_method_type === 'debit' ? '체크카드'
+                              : '계좌'}
+                          </span>
+                          <span className="text-gray-500">
+                            {e.payment_method_nickname} ({e.payment_method_number})
+                          </span>
+                        </div>
+                      ) : e.card_number || '-'}
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-gray-800 tabular-nums">
                       {fmt(e.amount)}
