@@ -19,6 +19,7 @@ class Expense(Base):
     vendor: Mapped[Optional[str]] = mapped_column(String(200))
     card_number: Mapped[Optional[str]] = mapped_column(String(50))
     payment_method_id: Mapped[Optional[int]] = mapped_column(ForeignKey("payment_methods.id"), nullable=True)
+    withdrawal_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
 

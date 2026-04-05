@@ -34,6 +34,7 @@ def _to_response(expense: Expense) -> ExpenseResponse:
         payment_method_nickname=pm.nickname if pm else None,
         payment_method_type=pm.type if pm else None,
         payment_method_number=pm.number if pm else None,
+        withdrawal_date=expense.withdrawal_date,
         created_at=expense.created_at,
         updated_at=expense.updated_at,
     )

@@ -71,6 +71,7 @@ export interface Expense {
   payment_method_nickname?: string
   payment_method_type?: string
   payment_method_number?: string
+  withdrawal_date?: string
   created_at: string
   updated_at: string
 }
@@ -95,6 +96,7 @@ export interface ExpenseCreate {
   vendor?: string
   card_number?: string
   payment_method_id?: number | null
+  withdrawal_date?: string | null
 }
 
 export interface ProjectCreate {

@@ -23,6 +23,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
     description: '',
     vendor: '',
     payment_method_id: null,
+    withdrawal_date: null,
   })
   const [rawAmount, setRawAmount] = useState('')
   const [loading, setLoading] = useState(false)
@@ -48,6 +49,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
             description: target.description,
             vendor: target.vendor || '',
             payment_method_id: target.payment_method_id ?? null,
+            withdrawal_date: target.withdrawal_date ?? null,
           })
           setRawAmount(target.amount.toString())
         }
@@ -171,6 +173,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
                   setForm((f) => ({
                     ...f,
                     payment_method_id: e.target.value ? Number(e.target.value) : null,
+                    withdrawal_date: null,
                   }))
                 }
                 className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
@@ -184,6 +187,20 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
               </select>
             </div>
           </div>
+          {/* 신용카드 선택 시 출금일 표시 */}
+          {paymentMethods.find((pm) => pm.id === form.payment_method_id)?.type === 'credit' && (
+            <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <label className="text-xs font-medium text-blue-700 mb-1.5 block">
+                출금일 <span className="font-normal text-blue-500">(신용카드 실제 출금 날짜)</span>
+              </label>
+              <input
+                type="date"
+                value={form.withdrawal_date ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, withdrawal_date: e.target.value || null }))}
+                className="w-full text-sm border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              />
+            </div>
+          )}
         </div>
 
         {/* 금액 */}

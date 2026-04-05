@@ -293,13 +293,19 @@ export default function MonthlyStats() {
                       <th className="text-left px-4 py-2.5 font-medium">내용</th>
                       <th className="text-left px-4 py-2.5 font-medium">비목</th>
                       <th className="text-left px-4 py-2.5 font-medium">지출처</th>
+                      <th className="text-left px-4 py-2.5 font-medium">결제수단</th>
                       <th className="text-right px-5 py-2.5 font-medium">금액</th>
                     </tr>
                   </thead>
                   <tbody>
                     {monthExpenses.map((e, i) => (
                       <tr key={e.id} className={`border-b border-gray-50 ${i % 2 !== 0 ? 'bg-gray-50/50' : ''}`}>
-                        <td className="px-5 py-2 text-gray-500">{e.expense_date}</td>
+                        <td className="px-5 py-2 tabular-nums">
+                          <div className="text-gray-500">{e.expense_date}</div>
+                          {e.withdrawal_date && (
+                            <div className="text-[10px] text-blue-500 mt-0.5">출금 {e.withdrawal_date}</div>
+                          )}
+                        </td>
                         <td className="px-4 py-2 text-gray-800 max-w-[200px] truncate">{e.description}</td>
                         <td className="px-4 py-2">
                           <span className="inline-flex px-2 py-0.5 rounded text-[10px] bg-primary-100 text-primary-700 font-medium">
@@ -307,6 +313,24 @@ export default function MonthlyStats() {
                           </span>
                         </td>
                         <td className="px-4 py-2 text-gray-500">{e.vendor || '-'}</td>
+                        <td className="px-4 py-2">
+                          {e.payment_method_nickname ? (
+                            <div className="flex items-center gap-1">
+                              <span className={`inline-flex px-1.5 py-0.5 rounded font-medium text-[10px] ${
+                                e.payment_method_type === 'credit'
+                                  ? 'bg-blue-50 text-blue-600'
+                                  : e.payment_method_type === 'debit'
+                                    ? 'bg-violet-50 text-violet-600'
+                                    : 'bg-emerald-50 text-emerald-600'
+                              }`}>
+                                {e.payment_method_type === 'credit' ? '신용카드'
+                                  : e.payment_method_type === 'debit' ? '체크카드'
+                                  : '계좌'}
+                              </span>
+                              <span className="text-gray-500 text-[10px]">{e.payment_method_nickname}</span>
+                            </div>
+                          ) : <span className="text-gray-400">-</span>}
+                        </td>
                         <td className="px-5 py-2 text-right font-medium text-gray-800 tabular-nums">{fmt(e.amount)}</td>
                       </tr>
                     ))}

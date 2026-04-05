@@ -185,7 +185,12 @@ export default function ExpenseList() {
                     }`}
                   >
                     <td className="px-4 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
-                    <td className="px-4 py-3 text-gray-500 tabular-nums">{e.expense_date}</td>
+                    <td className="px-4 py-3 tabular-nums">
+                      <div className="text-gray-500">{e.expense_date}</div>
+                      {e.withdrawal_date && (
+                        <div className="text-[10px] text-blue-500 mt-0.5">출금 {e.withdrawal_date}</div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-800 max-w-[160px] truncate">{e.description}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex px-2 py-0.5 rounded text-xs bg-primary-100 text-primary-700 font-medium">
