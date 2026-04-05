@@ -43,6 +43,20 @@ export interface BudgetSummary {
   categories: CategoryBudgetItem[]
 }
 
+export interface PaymentMethod {
+  id: number
+  type: 'credit' | 'debit' | 'account'
+  nickname: string
+  number: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface PaymentMethodListResponse {
+  items: PaymentMethod[]
+  total_count: number
+}
+
 export interface Expense {
   id: number
   project_id: number
@@ -53,6 +67,10 @@ export interface Expense {
   description: string
   vendor?: string
   card_number?: string
+  payment_method_id?: number
+  payment_method_nickname?: string
+  payment_method_type?: string
+  payment_method_number?: string
   created_at: string
   updated_at: string
 }
@@ -76,6 +94,7 @@ export interface ExpenseCreate {
   description: string
   vendor?: string
   card_number?: string
+  payment_method_id?: number | null
 }
 
 export interface ProjectCreate {

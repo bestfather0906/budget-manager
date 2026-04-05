@@ -18,6 +18,7 @@ class ExpenseCreate(BaseModel):
     description: str
     vendor: Optional[str] = None
     card_number: Optional[str] = None
+    payment_method_id: Optional[int] = None
 
     @field_validator("card_number", mode="before")
     @classmethod
@@ -48,6 +49,7 @@ class ExpenseUpdate(BaseModel):
     description: Optional[str] = None
     vendor: Optional[str] = None
     card_number: Optional[str] = None
+    payment_method_id: Optional[int] = None
 
     @field_validator("card_number", mode="before")
     @classmethod
@@ -69,6 +71,10 @@ class ExpenseResponse(BaseModel):
     description: str
     vendor: Optional[str]
     card_number: Optional[str]
+    payment_method_id: Optional[int] = None
+    payment_method_nickname: Optional[str] = None
+    payment_method_type: Optional[str] = None
+    payment_method_number: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

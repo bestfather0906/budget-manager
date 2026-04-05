@@ -171,7 +171,7 @@ export default function ExpenseList() {
                   <th className="text-left px-4 py-3 font-medium">내용</th>
                   <th className="text-left px-4 py-3 font-medium">비목</th>
                   <th className="text-left px-4 py-3 font-medium">지출처</th>
-                  <th className="text-left px-4 py-3 font-medium">카드번호</th>
+                  <th className="text-left px-4 py-3 font-medium">결제수단</th>
                   <th className="text-right px-4 py-3 font-medium">금액</th>
                   <th className="text-center px-4 py-3 font-medium">액션</th>
                 </tr>
@@ -193,8 +193,10 @@ export default function ExpenseList() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500">{e.vendor || '-'}</td>
-                    <td className="px-4 py-3 text-gray-400 tabular-nums text-xs">
-                      {e.card_number || '-'}
+                    <td className="px-4 py-3 text-gray-500 text-xs">
+                      {e.payment_method_nickname
+                        ? `${e.payment_method_nickname} (${e.payment_method_number})`
+                        : e.card_number || '-'}
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-gray-800 tabular-nums">
                       {fmt(e.amount)}

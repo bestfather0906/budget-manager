@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import categories, expenses, projects
+from app.routers import categories, expenses, payment_methods, projects
 
 app = FastAPI(title="사업예산 관리 API", version="1.0.0")
 app.router.redirect_slashes = False
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(projects.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
 app.include_router(expenses.router, prefix="/api/v1")
+app.include_router(payment_methods.router, prefix="/api/v1")
 
 
 @app.get("/health")

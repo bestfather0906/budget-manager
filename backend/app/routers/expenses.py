@@ -19,6 +19,7 @@ def _get_expense_or_404(expense_id: int, db: Session) -> Expense:
 
 
 def _to_response(expense: Expense) -> ExpenseResponse:
+    pm = expense.payment_method
     return ExpenseResponse(
         id=expense.id,
         project_id=expense.project_id,
@@ -29,6 +30,10 @@ def _to_response(expense: Expense) -> ExpenseResponse:
         description=expense.description,
         vendor=expense.vendor,
         card_number=expense.card_number,
+        payment_method_id=pm.id if pm else None,
+        payment_method_nickname=pm.nickname if pm else None,
+        payment_method_type=pm.type if pm else None,
+        payment_method_number=pm.number if pm else None,
         created_at=expense.created_at,
         updated_at=expense.updated_at,
     )

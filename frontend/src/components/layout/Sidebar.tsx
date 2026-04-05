@@ -8,6 +8,7 @@ import {
   Settings,
   Plus,
   Wallet,
+  CreditCard,
 } from 'lucide-react'
 import { getProjects } from '../../api/projects'
 import type { ProjectSummary } from '../../types'
@@ -52,6 +53,21 @@ export default function Sidebar() {
         >
           <PieChart size={16} />
           전체 예산 현황
+        </NavLink>
+
+        {/* 결제수단 관리 */}
+        <NavLink
+          to="/payment-methods"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors mt-1 ${
+              isActive
+                ? 'bg-primary-500 text-white font-medium'
+                : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+            }`
+          }
+        >
+          <CreditCard size={16} />
+          결제수단 관리
         </NavLink>
 
         {/* 사업별 메뉴 */}

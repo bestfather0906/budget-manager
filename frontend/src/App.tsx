@@ -7,6 +7,7 @@ import CategoryManage from './pages/CategoryManage'
 import ExpenseList from './pages/ExpenseList'
 import ExpenseForm from './pages/ExpenseForm'
 import MonthlyStats from './pages/MonthlyStats'
+import PaymentMethodManage from './pages/PaymentMethodManage'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/projects/:id/expenses/new" element={<ExpenseForm mode="new" />} />
           <Route path="/projects/:id/expenses/:eid/edit" element={<ExpenseForm mode="edit" />} />
           <Route path="/projects/:id/monthly" element={<MonthlyStats />} />
+          <Route path="/payment-methods" element={<PaymentMethodManage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

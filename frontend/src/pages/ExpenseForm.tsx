@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getCategories } from '../api/categories'
 import { createExpense, getExpenses, updateExpense } from '../api/expenses'
-import type { BudgetCategory, ExpenseCreate } from '../types'
+import { getPaymentMethods } from '../api/paymentMethods'
+import type { BudgetCategory, ExpenseCreate, PaymentMethod } from '../types'
 import Toast from '../components/ui/Toast'
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -14,13 +15,14 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
   const projectId = Number(id)
 
   const [categories, setCategories] = useState<BudgetCategory[]>([])
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [form, setForm] = useState<ExpenseCreate>({
     category_id: 0,
     expense_date: today(),
     amount: 0,
     description: '',
     vendor: '',
-    card_number: '',
+    payment_method_id: null,
   })
   const [rawAmount, setRawAmount] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,6 +35,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
         setForm((f) => ({ ...f, category_id: r.data[0].id }))
       }
     })
+    getPaymentMethods(true).then((r) => setPaymentMethods(r.data.items))
 
     if (mode === 'edit' && eid) {
       getExpenses(projectId).then((r) => {
@@ -44,7 +47,7 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
             amount: target.amount,
             description: target.description,
             vendor: target.vendor || '',
-            card_number: target.card_number || '',
+            payment_method_id: target.payment_method_id ?? null,
           })
           setRawAmount(target.amount.toString())
         }
@@ -161,14 +164,24 @@ export default function ExpenseForm({ mode }: { mode: 'new' | 'edit' }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">사용카드번호</label>
-              <input
-                type="text"
-                value={form.card_number}
-                onChange={(e) => setForm((f) => ({ ...f, card_number: e.target.value }))}
-                placeholder="****-****-****-1234"
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
-              />
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">결제수단</label>
+              <select
+                value={form.payment_method_id ?? ''}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    payment_method_id: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+              >
+                <option value="">선택 안 함</option>
+                {paymentMethods.map((pm) => (
+                  <option key={pm.id} value={pm.id}>
+                    {pm.nickname} ({pm.number})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
