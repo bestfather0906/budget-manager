@@ -69,17 +69,19 @@ def get_project_summary(db: Session, project_id: int) -> BudgetSummary:
 
 
 def get_monthly_stats(db: Session, project_id: int) -> List[MonthlyStatItem]:
-    """SQLite: strftime('%Y-%m', expense_date) 로 월별·비목별 집계"""
+    """PostgreSQL: TO_CHAR(expense_date, 'YYYY-MM') 로 월별·비목별 집계"""
+    from sqlalchemy import cast, String
+    month_expr = func.to_char(Expense.expense_date, "YYYY-MM").label("month")
     results = (
         db.query(
-            func.strftime("%Y-%m", Expense.expense_date).label("month"),
+            month_expr,
             BudgetCategory.name.label("category_name"),
             func.sum(Expense.amount).label("total_amount"),
         )
         .join(BudgetCategory, Expense.category_id == BudgetCategory.id)
         .filter(Expense.project_id == project_id)
-        .group_by("month", "category_name")
-        .order_by("month", "category_name")
+        .group_by(func.to_char(Expense.expense_date, "YYYY-MM"), BudgetCategory.name)
+        .order_by(func.to_char(Expense.expense_date, "YYYY-MM"), BudgetCategory.name)
         .all()
     )
 
