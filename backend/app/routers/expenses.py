@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import BudgetCategory, Expense, Project
+from app.models import BudgetItem, Expense, Project
 from app.schemas.expense import ExpenseCreate, ExpenseListResponse, ExpenseResponse, ExpenseUpdate
 
 router = APIRouter(tags=["expenses"])
@@ -20,16 +20,20 @@ def _get_expense_or_404(expense_id: int, db: Session) -> Expense:
 
 def _to_response(expense: Expense) -> ExpenseResponse:
     pm = expense.payment_method
+    item = expense.budget_item
+    sub = item.sub_category if item else None
+    cat = sub.category if sub else None
     return ExpenseResponse(
         id=expense.id,
         project_id=expense.project_id,
-        category_id=expense.category_id,
-        category_name=expense.category.name if expense.category else "",
+        budget_item_id=expense.budget_item_id,
+        budget_item_name=item.name if item else "",
+        sub_category_name=sub.name if sub else "",
+        category_name=cat.name if cat else "",
         expense_date=expense.expense_date,
         amount=expense.amount,
         description=expense.description,
         vendor=expense.vendor,
-        card_number=expense.card_number,
         payment_method_id=pm.id if pm else None,
         payment_method_nickname=pm.nickname if pm else None,
         payment_method_type=pm.type if pm else None,
@@ -44,6 +48,8 @@ def _to_response(expense: Expense) -> ExpenseResponse:
 def list_expenses(
     project_id: int,
     category_id: Optional[int] = None,
+    sub_category_id: Optional[int] = None,
+    budget_item_id: Optional[int] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     db: Session = Depends(get_db),
@@ -53,8 +59,21 @@ def list_expenses(
         raise HTTPException(status_code=404, detail="사업을 찾을 수 없습니다.")
 
     query = db.query(Expense).filter(Expense.project_id == project_id)
-    if category_id:
-        query = query.filter(Expense.category_id == category_id)
+
+    if budget_item_id:
+        query = query.filter(Expense.budget_item_id == budget_item_id)
+    elif sub_category_id:
+        items = db.query(BudgetItem).filter_by(sub_category_id=sub_category_id).all()
+        item_ids = [i.id for i in items]
+        query = query.filter(Expense.budget_item_id.in_(item_ids))
+    elif category_id:
+        from app.models import BudgetSubCategory
+        subs = db.query(BudgetSubCategory).filter_by(category_id=category_id).all()
+        sub_ids = [s.id for s in subs]
+        items = db.query(BudgetItem).filter(BudgetItem.sub_category_id.in_(sub_ids)).all()
+        item_ids = [i.id for i in items]
+        query = query.filter(Expense.budget_item_id.in_(item_ids))
+
     if start_date:
         query = query.filter(Expense.expense_date >= start_date)
     if end_date:
@@ -76,9 +95,9 @@ def create_expense(project_id: int, data: ExpenseCreate, db: Session = Depends(g
     if not project:
         raise HTTPException(status_code=404, detail="사업을 찾을 수 없습니다.")
 
-    category = db.get(BudgetCategory, data.category_id)
-    if not category or category.project_id != project_id:
-        raise HTTPException(status_code=400, detail="유효하지 않은 비목입니다.")
+    item = db.get(BudgetItem, data.budget_item_id)
+    if not item:
+        raise HTTPException(status_code=400, detail="유효하지 않은 품목입니다.")
 
     expense = Expense(project_id=project_id, **data.model_dump())
     db.add(expense)

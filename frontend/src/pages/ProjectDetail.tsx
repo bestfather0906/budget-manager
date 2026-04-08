@@ -107,10 +107,10 @@ export default function ProjectDetail() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/projects/${id}/categories`)}
+            onClick={() => navigate(`/projects/${id}/budget-plan`)}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <Settings size={14} /> 비목 관리
+            <Settings size={14} /> 예산계획
           </button>
           <button
             onClick={handleExport}

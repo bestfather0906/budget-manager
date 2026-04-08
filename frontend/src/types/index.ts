@@ -14,13 +14,41 @@ export interface ProjectSummary extends Project {
   status_color: 'green' | 'yellow' | 'red'
 }
 
+// ── 예산 계층 구조 ───────────────────────────────────────────
+
 export interface BudgetCategory {
   id: number
   project_id: number
   name: string
-  allocated_amount: number
   order_index: number
 }
+
+export interface BudgetSubCategory {
+  id: number
+  category_id: number
+  name: string
+  order_index: number
+}
+
+export interface BudgetItem {
+  id: number
+  sub_category_id: number
+  name: string
+  unit_price: number
+  quantity: number
+  note?: string
+  planned_amount: number
+}
+
+export interface BudgetSubCategoryWithItems extends BudgetSubCategory {
+  budget_items: BudgetItem[]
+}
+
+export interface BudgetCategoryWithTree extends BudgetCategory {
+  sub_categories: BudgetSubCategoryWithItems[]
+}
+
+// ── 집행현황 요약 ────────────────────────────────────────────
 
 export interface CategoryBudgetItem {
   category_id: number
@@ -43,6 +71,8 @@ export interface BudgetSummary {
   categories: CategoryBudgetItem[]
 }
 
+// ── 결제수단 ─────────────────────────────────────────────────
+
 export interface PaymentMethod {
   id: number
   type: 'credit' | 'debit' | 'account'
@@ -57,16 +87,19 @@ export interface PaymentMethodListResponse {
   total_count: number
 }
 
+// ── 지출 ─────────────────────────────────────────────────────
+
 export interface Expense {
   id: number
   project_id: number
-  category_id: number
+  budget_item_id: number
+  budget_item_name: string
+  sub_category_name: string
   category_name: string
   expense_date: string
   amount: number
   description: string
   vendor?: string
-  card_number?: string
   payment_method_id?: number
   payment_method_nickname?: string
   payment_method_type?: string
@@ -82,22 +115,25 @@ export interface ExpenseListResponse {
   total_amount: number
 }
 
+export interface ExpenseCreate {
+  budget_item_id: number
+  expense_date: string
+  amount: number
+  description: string
+  vendor?: string
+  payment_method_id?: number | null
+  withdrawal_date?: string | null
+}
+
+// ── 월별 통계 ────────────────────────────────────────────────
+
 export interface MonthlyStatItem {
   month: string
   category_name: string
   total_amount: number
 }
 
-export interface ExpenseCreate {
-  category_id: number
-  expense_date: string
-  amount: number
-  description: string
-  vendor?: string
-  card_number?: string
-  payment_method_id?: number | null
-  withdrawal_date?: string | null
-}
+// ── 프로젝트 생성/수정 ───────────────────────────────────────
 
 export interface ProjectCreate {
   name: string
@@ -109,6 +145,17 @@ export interface ProjectCreate {
 
 export interface CategoryCreate {
   name: string
-  allocated_amount: number
   order_index?: number
+}
+
+export interface SubCategoryCreate {
+  name: string
+  order_index?: number
+}
+
+export interface BudgetItemCreate {
+  name: string
+  unit_price: number
+  quantity: number
+  note?: string
 }

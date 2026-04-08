@@ -3,7 +3,7 @@ from typing import List, Literal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models import BudgetCategory, Expense, Project
+from app.models import BudgetCategory, BudgetItem, BudgetSubCategory, Expense, Project
 from app.schemas.project import BudgetSummary, CategoryBudgetItem, MonthlyStatItem
 
 
@@ -26,22 +26,31 @@ def get_project_summary(db: Session, project_id: int) -> BudgetSummary:
     )
 
     category_items: List[CategoryBudgetItem] = []
-    total_allocated = sum(c.allocated_amount for c in categories)
 
     for cat in categories:
+        # 세목 아래 모든 품목 ID 수집
+        sub_ids = [s.id for s in db.query(BudgetSubCategory).filter_by(category_id=cat.id).all()]
+        items = db.query(BudgetItem).filter(BudgetItem.sub_category_id.in_(sub_ids)).all() if sub_ids else []
+        item_ids = [i.id for i in items]
+
+        # 계획금액 = 품목별 단가 × 수량 합계
+        planned = sum(i.unit_price * i.quantity for i in items)
+
+        # 집행액
         spent = (
             db.query(func.sum(Expense.amount))
-            .filter(Expense.category_id == cat.id)
+            .filter(Expense.budget_item_id.in_(item_ids))
             .scalar()
             or 0
-        )
-        remaining = cat.allocated_amount - spent
-        rate = round(spent / cat.allocated_amount * 100, 1) if cat.allocated_amount > 0 else 0.0
+        ) if item_ids else 0
+
+        remaining = planned - spent
+        rate = round(spent / planned * 100, 1) if planned > 0 else 0.0
         category_items.append(
             CategoryBudgetItem(
                 category_id=cat.id,
                 category_name=cat.name,
-                allocated_amount=cat.allocated_amount,
+                allocated_amount=planned,
                 spent_amount=spent,
                 remaining=remaining,
                 execution_rate=rate,
@@ -49,12 +58,10 @@ def get_project_summary(db: Session, project_id: int) -> BudgetSummary:
             )
         )
 
+    total_planned = sum(item.allocated_amount for item in category_items)
     total_spent = sum(item.spent_amount for item in category_items)
-    total_remaining = project.total_budget - total_spent
-    overall_rate = (
-        round(total_spent / project.total_budget * 100, 1) if project.total_budget > 0 else 0.0
-    )
-    budget_warning = total_allocated > project.total_budget
+    total_remaining = total_planned - total_spent
+    overall_rate = round(total_spent / total_planned * 100, 1) if total_planned > 0 else 0.0
 
     return BudgetSummary(
         project_id=project.id,
@@ -63,22 +70,22 @@ def get_project_summary(db: Session, project_id: int) -> BudgetSummary:
         total_spent=total_spent,
         total_remaining=total_remaining,
         execution_rate=overall_rate,
-        budget_warning=budget_warning,
+        budget_warning=total_planned > project.total_budget,
         categories=category_items,
     )
 
 
 def get_monthly_stats(db: Session, project_id: int) -> List[MonthlyStatItem]:
-    """PostgreSQL: TO_CHAR(expense_date, 'YYYY-MM') 로 월별·비목별 집계"""
-    from sqlalchemy import cast, String
-    month_expr = func.to_char(Expense.expense_date, "YYYY-MM").label("month")
+    """PostgreSQL: TO_CHAR(expense_date, 'YYYY-MM') 로 월별·세목별 집계"""
     results = (
         db.query(
-            month_expr,
+            func.to_char(Expense.expense_date, "YYYY-MM").label("month"),
             BudgetCategory.name.label("category_name"),
             func.sum(Expense.amount).label("total_amount"),
         )
-        .join(BudgetCategory, Expense.category_id == BudgetCategory.id)
+        .join(BudgetItem, Expense.budget_item_id == BudgetItem.id)
+        .join(BudgetSubCategory, BudgetItem.sub_category_id == BudgetSubCategory.id)
+        .join(BudgetCategory, BudgetSubCategory.category_id == BudgetCategory.id)
         .filter(Expense.project_id == project_id)
         .group_by(func.to_char(Expense.expense_date, "YYYY-MM"), BudgetCategory.name)
         .order_by(func.to_char(Expense.expense_date, "YYYY-MM"), BudgetCategory.name)

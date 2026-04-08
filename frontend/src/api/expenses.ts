@@ -3,7 +3,7 @@ import type { Expense, ExpenseCreate, ExpenseListResponse } from '../types'
 
 export const getExpenses = (
   projectId: number,
-  params?: { category_id?: number; start_date?: string; end_date?: string }
+  params?: { category_id?: number; sub_category_id?: number; budget_item_id?: number; start_date?: string; end_date?: string }
 ) => client.get<ExpenseListResponse>(`/api/v1/projects/${projectId}/expenses`, { params })
 
 export const createExpense = (projectId: number, data: ExpenseCreate) =>

@@ -4,29 +4,14 @@ from typing import List, Optional
 from pydantic import BaseModel, field_validator
 
 
-def _mask_card_number(v: str) -> str:
-    digits = v.replace("-", "").replace(" ", "")
-    if len(digits) >= 4:
-        return f"****-****-****-{digits[-4:]}"
-    return v
-
-
 class ExpenseCreate(BaseModel):
-    category_id: int
+    budget_item_id: int
     expense_date: date
     amount: int
     description: str
     vendor: Optional[str] = None
-    card_number: Optional[str] = None
     payment_method_id: Optional[int] = None
     withdrawal_date: Optional[date] = None
-
-    @field_validator("card_number", mode="before")
-    @classmethod
-    def mask_card(cls, v: Optional[str]) -> Optional[str]:
-        if v and v.strip():
-            return _mask_card_number(v.strip())
-        return None
 
     @field_validator("amount")
     @classmethod
@@ -44,21 +29,13 @@ class ExpenseCreate(BaseModel):
 
 
 class ExpenseUpdate(BaseModel):
-    category_id: Optional[int] = None
+    budget_item_id: Optional[int] = None
     expense_date: Optional[date] = None
     amount: Optional[int] = None
     description: Optional[str] = None
     vendor: Optional[str] = None
-    card_number: Optional[str] = None
     payment_method_id: Optional[int] = None
     withdrawal_date: Optional[date] = None
-
-    @field_validator("card_number", mode="before")
-    @classmethod
-    def mask_card(cls, v: Optional[str]) -> Optional[str]:
-        if v and v.strip():
-            return _mask_card_number(v.strip())
-        return None
 
 
 class ExpenseResponse(BaseModel):
@@ -66,13 +43,14 @@ class ExpenseResponse(BaseModel):
 
     id: int
     project_id: int
-    category_id: int
+    budget_item_id: int
+    budget_item_name: str = ""
+    sub_category_name: str = ""
     category_name: str = ""
     expense_date: date
     amount: int
     description: str
     vendor: Optional[str]
-    card_number: Optional[str]
     payment_method_id: Optional[int] = None
     payment_method_nickname: Optional[str] = None
     payment_method_type: Optional[str] = None

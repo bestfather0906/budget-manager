@@ -1,11 +1,11 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import BudgetCategory, Project
-from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate
+from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate, CategoryWithTree
 
 router = APIRouter(tags=["categories"])
 
@@ -13,7 +13,7 @@ router = APIRouter(tags=["categories"])
 def _get_category_or_404(category_id: int, db: Session) -> BudgetCategory:
     cat = db.get(BudgetCategory, category_id)
     if not cat:
-        raise HTTPException(status_code=404, detail="비목을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="세목을 찾을 수 없습니다.")
     return cat
 
 
@@ -23,6 +23,25 @@ def list_categories(project_id: int, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(status_code=404, detail="사업을 찾을 수 없습니다.")
     return db.query(BudgetCategory).filter_by(project_id=project_id).order_by(BudgetCategory.order_index).all()
+
+
+@router.get("/projects/{project_id}/budget-tree", response_model=List[CategoryWithTree])
+def get_budget_tree(project_id: int, db: Session = Depends(get_db)):
+    """세목→세세목→품목 전체 계층 조회"""
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="사업을 찾을 수 없습니다.")
+    return (
+        db.query(BudgetCategory)
+        .filter_by(project_id=project_id)
+        .options(
+            selectinload(BudgetCategory.sub_categories).selectinload(
+                lambda sc: sc.budget_items  # type: ignore[attr-defined]
+            )
+        )
+        .order_by(BudgetCategory.order_index)
+        .all()
+    )
 
 
 @router.post("/projects/{project_id}/categories", response_model=CategoryResponse, status_code=201)

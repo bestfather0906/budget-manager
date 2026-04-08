@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { getExpenses, deleteExpense } from '../api/expenses'
-import { getCategories } from '../api/categories'
+import { getCategories } from '../api/budgetTree'
 import type { Expense, BudgetCategory } from '../types'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import Toast from '../components/ui/Toast'
@@ -83,17 +83,15 @@ export default function ExpenseList() {
       {/* 필터 */}
       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-wrap items-end gap-3">
         <div>
-          <label className="text-xs text-gray-500 font-medium mb-1 block">비목</label>
+          <label className="text-xs text-gray-500 font-medium mb-1 block">세목</label>
           <select
             value={filterCat}
             onChange={(e) => setFilterCat(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
           >
-            <option value="">전체 비목</option>
+            <option value="">전체 세목</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </div>
@@ -122,11 +120,7 @@ export default function ExpenseList() {
           <Search size={14} /> 조회
         </button>
         <button
-          onClick={() => {
-            setFilterCat('')
-            setFilterStart('')
-            setFilterEnd('')
-          }}
+          onClick={() => { setFilterCat(''); setFilterStart(''); setFilterEnd('') }}
           className="text-sm text-gray-400 hover:text-gray-600"
         >
           초기화
@@ -166,60 +160,58 @@ export default function ExpenseList() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-                  <th className="text-center px-4 py-3 font-medium w-10">#</th>
-                  <th className="text-left px-4 py-3 font-medium">결제일</th>
-                  <th className="text-left px-4 py-3 font-medium">출금일</th>
-                  <th className="text-left px-4 py-3 font-medium">내용</th>
-                  <th className="text-left px-4 py-3 font-medium">비목</th>
-                  <th className="text-left px-4 py-3 font-medium">지출처</th>
-                  <th className="text-left px-4 py-3 font-medium">결제수단</th>
-                  <th className="text-right px-4 py-3 font-medium">금액</th>
-                  <th className="text-center px-4 py-3 font-medium">액션</th>
+                  <th className="text-center px-3 py-3 font-medium w-10">#</th>
+                  <th className="text-left px-3 py-3 font-medium">결제일</th>
+                  <th className="text-left px-3 py-3 font-medium">세목</th>
+                  <th className="text-left px-3 py-3 font-medium">세세목</th>
+                  <th className="text-left px-3 py-3 font-medium">품목</th>
+                  <th className="text-left px-3 py-3 font-medium">내용</th>
+                  <th className="text-left px-3 py-3 font-medium">지출처</th>
+                  <th className="text-left px-3 py-3 font-medium">결제수단</th>
+                  <th className="text-right px-3 py-3 font-medium">금액</th>
+                  <th className="text-center px-3 py-3 font-medium">액션</th>
                 </tr>
               </thead>
               <tbody>
                 {expenses.map((e, i) => (
                   <tr
                     key={e.id}
-                    className={`border-b border-gray-50 hover:bg-primary-50/30 transition-colors ${
-                      i % 2 !== 0 ? 'bg-gray-50/50' : ''
-                    }`}
+                    className={`border-b border-gray-50 hover:bg-primary-50/30 transition-colors ${i % 2 !== 0 ? 'bg-gray-50/50' : ''}`}
                   >
-                    <td className="px-4 py-3 text-center text-gray-400 text-xs">{i + 1}</td>
-                    <td className="px-4 py-3 tabular-nums text-gray-500">{e.expense_date}</td>
-                    <td className="px-4 py-3 tabular-nums text-gray-500">{e.withdrawal_date || '-'}</td>
-                    <td className="px-4 py-3 text-gray-800 max-w-[160px] truncate">{e.description}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex px-2 py-0.5 rounded text-xs bg-primary-100 text-primary-700 font-medium">
+                    <td className="px-3 py-2.5 text-center text-gray-400 text-xs">{i + 1}</td>
+                    <td className="px-3 py-2.5 tabular-nums text-gray-500 text-xs">{e.expense_date}</td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex px-1.5 py-0.5 rounded text-xs bg-orange-100 text-orange-700 font-medium">
                         {e.category_name}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{e.vendor || '-'}</td>
-                    <td className="px-4 py-3 text-xs">
-                      {e.payment_method_nickname ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className={`inline-flex px-1.5 py-0.5 rounded font-medium ${
-                            e.payment_method_type === 'credit'
-                              ? 'bg-blue-50 text-blue-600'
-                              : e.payment_method_type === 'debit'
-                                ? 'bg-violet-50 text-violet-600'
-                                : 'bg-emerald-50 text-emerald-600'
-                          }`}>
-                            {e.payment_method_type === 'credit' ? '신용카드'
-                              : e.payment_method_type === 'debit' ? '체크카드'
-                              : '계좌'}
-                          </span>
-                          <span className="text-gray-500">
-                            {e.payment_method_nickname} ({e.payment_method_number})
-                          </span>
-                        </div>
-                      ) : e.card_number || '-'}
+                    <td className="px-3 py-2.5 text-xs text-gray-500">{e.sub_category_name}</td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex px-1.5 py-0.5 rounded text-xs bg-primary-100 text-primary-700 font-medium">
+                        {e.budget_item_name}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-800 tabular-nums">
+                    <td className="px-3 py-2.5 text-gray-800 max-w-[140px] truncate text-xs">{e.description}</td>
+                    <td className="px-3 py-2.5 text-gray-500 text-xs">{e.vendor || '-'}</td>
+                    <td className="px-3 py-2.5 text-xs">
+                      {e.payment_method_nickname ? (
+                        <div className="flex items-center gap-1">
+                          <span className={`inline-flex px-1 py-0.5 rounded font-medium ${
+                            e.payment_method_type === 'credit' ? 'bg-blue-50 text-blue-600'
+                            : e.payment_method_type === 'debit' ? 'bg-violet-50 text-violet-600'
+                            : 'bg-emerald-50 text-emerald-600'
+                          }`}>
+                            {e.payment_method_type === 'credit' ? '신용' : e.payment_method_type === 'debit' ? '체크' : '계좌'}
+                          </span>
+                          <span className="text-gray-500">{e.payment_method_nickname}</span>
+                        </div>
+                      ) : '-'}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-semibold text-gray-800 tabular-nums">
                       {fmt(e.amount)}
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-3 py-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => navigate(`/projects/${id}/expenses/${e.id}/edit`)}
                           className="p-1.5 text-gray-400 hover:text-primary-500 hover:bg-primary-50 rounded-md transition-colors"
