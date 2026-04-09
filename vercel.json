@@ -1,6 +1,6 @@
 {
   "buildCommand": "cd frontend && npm ci && npm run build",
-  "outputDirectory": "api/static",
+  "outputDirectory": "dist",
   "routes": [
     { "src": "/api/v1/(.*)", "dest": "/api/index" },
     { "src": "/health", "dest": "/api/index" },
