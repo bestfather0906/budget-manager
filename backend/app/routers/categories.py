@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import BudgetCategory, Project
+from app.models.category import BudgetSubCategory
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate, CategoryWithTree
 
 router = APIRouter(tags=["categories"])
@@ -36,7 +37,7 @@ def get_budget_tree(project_id: int, db: Session = Depends(get_db)):
         .filter_by(project_id=project_id)
         .options(
             selectinload(BudgetCategory.sub_categories).selectinload(
-                lambda sc: sc.budget_items  # type: ignore[attr-defined]
+                BudgetSubCategory.budget_items
             )
         )
         .order_by(BudgetCategory.order_index)
