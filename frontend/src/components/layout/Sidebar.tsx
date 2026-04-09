@@ -24,7 +24,7 @@ export default function Sidebar() {
 
   const projectMenus = (projectId: number) => [
     { label: '집행현황', to: `/projects/${projectId}`, icon: <Wallet size={14} /> },
-    { label: '비목 관리', to: `/projects/${projectId}/categories`, icon: <FolderKanban size={14} /> },
+    { label: '비목 관리', to: `/projects/${projectId}/budget-plan`, icon: <FolderKanban size={14} /> },
     { label: '지출내역', to: `/projects/${projectId}/expenses`, icon: <Receipt size={14} /> },
     { label: '월별 현황', to: `/projects/${projectId}/monthly`, icon: <BarChart2 size={14} /> },
   ]
