@@ -1,10 +1,9 @@
 {
   "buildCommand": "cd frontend && npm ci && npm run build",
   "outputDirectory": "dist",
-  "routes": [
-    { "src": "/api/v1/(.*)", "dest": "/api/index" },
-    { "src": "/health", "dest": "/api/index" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/v1/:path*", "destination": "/api/index" },
+    { "source": "/health", "destination": "/api/index" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
