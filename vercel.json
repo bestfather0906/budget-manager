@@ -1,6 +1,10 @@
 {
   "buildCommand": "cd frontend && npm ci && npm run build",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+  "outputDirectory": "api/static",
+  "routes": [
+    { "src": "/api/v1/(.*)", "dest": "/api/index" },
+    { "src": "/health", "dest": "/api/index" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
